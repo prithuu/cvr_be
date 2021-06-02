@@ -9,19 +9,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 @CrossOrigin
 @RestController
 @RequestMapping("/")
 public class EmployeeController {
+    private List<Integer> registeredIds=new ArrayList<>();
 
+    @ResponseBody
     @PostMapping(value="/")
-    public String register(@RequestBody Employee employee){
+    public ResponseForm register(@RequestBody Employee employee){
         try{
             ObjectMapper mapper = new ObjectMapper();
             String jsonStr = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(employee);
             Employee emp = mapper.readValue(jsonStr, Employee.class);
-
+            if(registeredIds.contains(emp.getId())) {
+                return new ResponseForm("AlreadyExist",employee);
+            }
             System.out.println(jsonStr);
             emp.setRelationship("Employee");
 
@@ -64,10 +70,11 @@ public class EmployeeController {
             book.write(fileOutputStream);
             fileOutputStream.flush();
             fileOutputStream.close();
-            return jsonStr;
+            registeredIds.add(emp.getId());
+            return new ResponseForm("Success",emp);
         }
         catch (Exception e){
-            return e.getMessage();
+            return new ResponseForm(e.toString(),employee);
         }
     }
 }
